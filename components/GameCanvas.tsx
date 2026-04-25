@@ -40,8 +40,9 @@ export default function GameCanvas() {
       lastFrameRef.current = now;
       tickPhysics(delta);
 
+      // Use Date.now() — startTime is also Date.now(), not performance.now()
       if (startTime) {
-        setElapsed((now - startTime) / 1000);
+        setElapsed((Date.now() - startTime) / 1000);
       }
 
       rafRef.current = requestAnimationFrame(loop);

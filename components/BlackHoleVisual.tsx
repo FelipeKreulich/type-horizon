@@ -57,6 +57,12 @@ export default function BlackHoleVisual({ playerDistance, intensity }: Props) {
       const pulseAmp = baseRadius * 0.03 * (1 + intensity * 0.5);
       const radius = baseRadius + Math.sin(t * 2.5) * pulseAmp;
 
+      // Guard: skip frame if values are invalid (can happen on first render or NaN props)
+      if (!isFinite(radius) || radius < 1) {
+        frameRef.current = requestAnimationFrame(draw);
+        return;
+      }
+
       ctx.clearRect(0, 0, W, H);
 
       // ---- Outer accretion disk glow ----

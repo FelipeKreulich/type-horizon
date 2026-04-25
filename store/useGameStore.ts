@@ -8,6 +8,7 @@ import {
   calculateScore,
   getBlackHolePull,
   getWordPushForce,
+  getDifficulty,
 } from '@/lib/gameLogic';
 
 // ---------------------------------------------------------------------------
@@ -68,8 +69,10 @@ interface GameStore {
 // Initial values
 // ---------------------------------------------------------------------------
 
-const INITIAL_DISTANCE = 60; // units from black hole center
+const INITIAL_DISTANCE = 55;
 const GAME_OVER_DISTANCE = 0;
+const WRONG_CHAR_PENALTY = 2.5; // distance units lost per wrong character typed
+const WRONG_WORD_PENALTY = 10; // distance units lost when submitting a wrong word
 
 function initialStats(): GameStats {
   return {
@@ -175,25 +178,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // -----------------------------------------------------------------------
   setInput: (value) => {
-    const { currentWord, totalCharsTyped } = get();
+    const state = get();
+    const { currentWord, inputValue: prevInput, gameState, playerDistance } = state;
 
-    // Count chars typed (only increment, never decrement on backspace)
-    const newTotal = Math.max(
-      totalCharsTyped,
-      value.length > 0 ? totalCharsTyped + 1 : totalCharsTyped
-    );
+    if (gameState !== 'playing') return;
 
-    // Live accuracy: check if current prefix matches
-    const isCorrectSoFar = currentWord.startsWith(value);
+    // Auto-advance: exact match → submit immediately without pressing Enter
+    if (value === currentWord) {
+      set({ inputValue: value });
+      get().submitWord();
+      return;
+    }
 
-    set({
-      inputValue: value,
-      totalCharsTyped: value.length > totalCharsTyped ? newTotal : totalCharsTyped,
-    });
+    const addedChar = value.length > prevInput.length;
+    const wrongChar = addedChar && !currentWord.startsWith(value);
 
-    // If typing wrong character → trigger shake feedback
-    if (value.length > 0 && !isCorrectSoFar) {
-      get().setShaking(true);
+    set({ inputValue: value });
+
+    if (wrongChar) {
+      const newDistance = Math.max(0, playerDistance - WRONG_CHAR_PENALTY);
+      set({ isShaking: true, playerDistance: newDistance });
+      setTimeout(() => set({ isShaking: false }), 350);
+      if (newDistance <= GAME_OVER_DISTANCE) get().endGame();
     }
   },
 
@@ -219,15 +225,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newCorrectChars = correctCharsTyped + currentWord.length;
       const newTotalChars = Math.max(totalCharsTyped, newCorrectChars);
       const accuracy = calculateAccuracy(newCorrectChars, newTotalChars);
-      const wpm = calculateWPM(newCorrectChars, elapsed);
+      const wpm = calculateWPM(newCorrectChars, Math.max(elapsed, 0.1));
 
       const pushForce = getWordPushForce(currentWord.length, newCombo);
       const distBoost = getWordDistanceBoost(currentWord);
       const newVelocity = playerVelocity + pushForce;
       const newDistance = Math.min(playerDistance + distBoost, 100);
 
-      const difficulty = Math.min(elapsed / 90, 1);
+      const difficulty = getDifficulty(elapsed);
       const nextWord = getNextWord(difficulty);
+
+      const score = calculateScore({
+        survivalSeconds: elapsed,
+        accuracy,
+        wpm,
+        wordsCompleted: newWordsCompleted,
+      });
 
       set({
         currentWord: nextWord,
@@ -245,20 +258,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
           wordsCompleted: newWordsCompleted,
           accuracy,
           wpm,
+          score,
         },
       });
 
       setTimeout(() => set({ isGlowing: false }), 600);
     } else {
-      // Wrong word submission — penalize
+      // Wrong word submission — lose distance + accuracy penalty
       const newErrors = stats.errorCount + 1;
-      const newTotal = totalCharsTyped + trimmed.length;
+      const newTotal = totalCharsTyped + Math.max(trimmed.length, 1);
       const accuracy = calculateAccuracy(correctCharsTyped, newTotal);
+      const newDistance = Math.max(0, playerDistance - WRONG_WORD_PENALTY);
 
       set({
         inputValue: '',
         isShaking: true,
         totalCharsTyped: newTotal,
+        playerDistance: newDistance,
         stats: {
           ...stats,
           combo: 0,
@@ -269,6 +285,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       });
 
       setTimeout(() => set({ isShaking: false }), 400);
+      if (newDistance <= GAME_OVER_DISTANCE) get().endGame();
     }
   },
 
@@ -287,8 +304,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       combo: stats.combo,
     });
 
-    // Smooth deceleration of positive velocity (drag in space)
-    const drag = 0.92;
+    // Velocity decay: 0.96 keeps forward momentum after correct words longer
+    const drag = 0.96;
     const newVelocity = (playerVelocity - pull * delta) * drag;
 
     const newDistance = playerDistance + newVelocity * delta;
@@ -299,12 +316,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const survivalSeconds = Math.floor(elapsed);
-    const wpm = calculateWPM(get().correctCharsTyped, elapsed);
+    const correctChars = get().correctCharsTyped;
+    const wpm = calculateWPM(correctChars, Math.max(elapsed, 0.1));
+    const score = calculateScore({
+      survivalSeconds,
+      accuracy: stats.accuracy,
+      wpm,
+      wordsCompleted: stats.wordsCompleted,
+    });
 
     set({
       playerDistance: Math.min(newDistance, 100),
       playerVelocity: newVelocity,
-      stats: { ...stats, survivalSeconds, wpm },
+      stats: { ...stats, survivalSeconds, wpm, score },
     });
   },
 

@@ -44,21 +44,21 @@ export function getBlackHolePull(params: {
   const { elapsedSeconds, accuracy, combo } = params;
   const difficulty = getDifficulty(elapsedSeconds);
 
-  // Base pull grows from 0.4 to 2.5 u/s²
-  const basePull = 0.4 + difficulty * 2.1;
+  // Base pull grows from 1.5 to 5.5 u/s² — aggressive from the start
+  const basePull = 1.5 + difficulty * 4.0;
 
-  // Accuracy: below 80% starts adding extra pull (up to +1.2)
-  const accuracyPenalty = accuracy < 80 ? ((80 - accuracy) / 80) * 1.2 : 0;
+  // Accuracy: below 85% adds extra pull (up to +2.5)
+  const accuracyPenalty = accuracy < 85 ? ((85 - accuracy) / 85) * 2.5 : 0;
 
-  // Active combo reduces pull slightly (combo capped at 10)
-  const comboRelief = Math.min(combo, 10) * 0.04;
+  // Active combo reduces pull (capped at 10 combo → -0.5 relief)
+  const comboRelief = Math.min(combo, 10) * 0.05;
 
-  return Math.max(0.1, basePull + accuracyPenalty - comboRelief);
+  return Math.max(0.5, basePull + accuracyPenalty - comboRelief);
 }
 
 // Forward push reward on correct word
 export function getWordPushForce(wordLength: number, combo: number): number {
-  const base = 2 + wordLength * 0.4;
-  const comboMultiplier = 1 + Math.min(combo, 15) * 0.08;
+  const base = 5 + wordLength * 0.9;
+  const comboMultiplier = 1 + Math.min(combo, 15) * 0.12;
   return base * comboMultiplier;
 }

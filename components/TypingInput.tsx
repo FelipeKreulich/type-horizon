@@ -79,12 +79,7 @@ export default function TypingInput() {
         <span className="animate-pulse text-blue-400">|</span>
       </div>
 
-      {/* Ghost preview of typed text */}
-      <div className="text-sm text-slate-500 font-mono min-h-[1.25rem]">
-        {inputValue || <span className="opacity-40">start typing…</span>}
-      </div>
-
-      {/* Invisible input — captures all keypresses */}
+      {/* Input — auto-submits on exact match, Space/Enter forces submit */}
       <input
         ref={inputRef}
         type="text"
@@ -96,14 +91,14 @@ export default function TypingInput() {
         autoCapitalize="off"
         spellCheck={false}
         className={`
-          w-64 px-4 py-3 rounded-lg text-center text-lg font-mono
+          w-64 px-4 py-3 rounded-lg text-center text-xl font-mono
           bg-slate-900/60 border text-slate-100
-          outline-none transition-all duration-200
+          outline-none transition-all duration-150
           ${glowClass}
-          ${isShaking ? 'border-red-500/70' : isGlowing ? 'border-emerald-500/70' : 'border-slate-700/60'}
-          focus:border-blue-500/60
+          ${isShaking ? 'border-red-500/80' : isGlowing ? 'border-emerald-400/80' : 'border-slate-700/50'}
+          focus:border-blue-500/70
         `}
-        placeholder="type here…"
+        placeholder="start typing…"
       />
 
       {/* Combo indicator */}
