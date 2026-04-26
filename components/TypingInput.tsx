@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '@/store/useGameStore';
+import { i18n } from '@/lib/i18n';
 
 /**
  * Main typing area: displays current word with live character highlighting
@@ -20,6 +21,7 @@ export default function TypingInput() {
   const setInput = useGameStore((s) => s.setInput);
   const submitWord = useGameStore((s) => s.submitWord);
   const gameState = useGameStore((s) => s.gameState);
+  const language = useGameStore((s) => s.language);
 
   // Keep focus on the input throughout the game
   useEffect(() => {
@@ -98,7 +100,7 @@ export default function TypingInput() {
           ${isShaking ? 'border-red-500/80' : isGlowing ? 'border-emerald-400/80' : 'border-slate-700/50'}
           focus:border-blue-500/70
         `}
-        placeholder="start typing…"
+        placeholder={i18n[language].startTyping}
       />
 
       {/* Combo indicator */}
@@ -109,8 +111,12 @@ export default function TypingInput() {
             style={{ animationDuration: '0.8s' }}
           />
           <span className="text-xs text-purple-300 tracking-widest uppercase font-bold">
-            {combo >= 15 ? 'GODLIKE' : combo >= 10 ? 'LEGENDARY' : combo >= 5 ? 'ON FIRE' : ''} ×
-            {combo}
+            {combo >= 15
+              ? i18n[language].godlike
+              : combo >= 10
+                ? i18n[language].legendary
+                : i18n[language].onFire}{' '}
+            ×{combo}
           </span>
           <div
             className="w-2 h-2 rounded-full bg-purple-400 animate-ping"

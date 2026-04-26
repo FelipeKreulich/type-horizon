@@ -1,5 +1,10 @@
-// Word pools grouped by length — longer words give more escape distance
-const SHORT_WORDS = [
+import type { Language } from './i18n';
+
+// ---------------------------------------------------------------------------
+// English word pools
+// ---------------------------------------------------------------------------
+
+const EN_SHORT = [
   'run',
   'fly',
   'go',
@@ -52,7 +57,7 @@ const SHORT_WORDS = [
   'map',
 ];
 
-const MEDIUM_WORDS = [
+const EN_MEDIUM = [
   'space',
   'orbit',
   'laser',
@@ -103,7 +108,7 @@ const MEDIUM_WORDS = [
   'relay',
 ];
 
-const LONG_WORDS = [
+const EN_LONG = [
   'velocity',
   'supernova',
   'gravity',
@@ -147,9 +152,149 @@ const LONG_WORDS = [
   'decelerate',
 ];
 
+// ---------------------------------------------------------------------------
+// Portuguese word pools
+// ---------------------------------------------------------------------------
+
+const PT_SHORT = [
+  'cor',
+  'luz',
+  'mar',
+  'sol',
+  'vez',
+  'voz',
+  'fim',
+  'bem',
+  'mal',
+  'paz',
+  'rei',
+  'lei',
+  'ser',
+  'ter',
+  'ver',
+  'dar',
+  'por',
+  'gem',
+  'lar',
+  'nau',
+  'voo',
+  'tom',
+  'dom',
+  'som',
+  'fio',
+  'rio',
+  'mao',
+  'dia',
+  'era',
+  'fel',
+  'ar',
+  'ir',
+  'rir',
+  'ceu',
+  'pes',
+  'bom',
+  'sao',
+  'dor',
+  'mor',
+  'uso',
+];
+
+const PT_MEDIUM = [
+  'forca',
+  'rapido',
+  'pulso',
+  'chama',
+  'brilho',
+  'vento',
+  'sombra',
+  'pedra',
+  'campo',
+  'tempo',
+  'mundo',
+  'ponto',
+  'forma',
+  'nivel',
+  'mente',
+  'poder',
+  'turbo',
+  'salto',
+  'fraco',
+  'carga',
+  'omega',
+  'prova',
+  'ruido',
+  'fluxo',
+  'plano',
+  'bloco',
+  'troar',
+  'surto',
+  'lance',
+  'golpe',
+  'ritmo',
+  'ardor',
+  'fardo',
+  'custo',
+  'rumo',
+  'marca',
+  'nexo',
+  'traco',
+  'vulto',
+  'claro',
+];
+
+const PT_LONG = [
+  'velocidade',
+  'supernova',
+  'gravidade',
+  'asteroide',
+  'dimensao',
+  'travessia',
+  'nebulosa',
+  'hiperespaco',
+  'singularidade',
+  'trajetoria',
+  'ignicao',
+  'catalisador',
+  'ressonancia',
+  'frequencia',
+  'magnitude',
+  'sequencia',
+  'proximidade',
+  'momento',
+  'isolamento',
+  'subsistema',
+  'gerador',
+  'limiar',
+  'protocolo',
+  'sobrecarga',
+  'satelite',
+  'radiacao',
+  'fragmento',
+  'colapso',
+  'propulsao',
+  'quantico',
+  'sintetico',
+  'transmitir',
+  'terminal',
+  'eletron',
+  'particula',
+  'buraco',
+  'vortice',
+  'antimateria',
+  'interestelar',
+  'aceleracao',
+  'desacelerar',
+];
+
+const POOLS: Record<Language, { short: string[]; medium: string[]; long: string[] }> = {
+  en: { short: EN_SHORT, medium: EN_MEDIUM, long: EN_LONG },
+  pt: { short: PT_SHORT, medium: PT_MEDIUM, long: PT_LONG },
+};
+
 // Pick word based on current difficulty level (0–1)
-export function getNextWord(difficulty: number): string {
+export function getNextWord(difficulty: number, lang: Language = 'en'): string {
   const roll = Math.random();
+  const { short, medium, long } = POOLS[lang];
 
   // As difficulty grows, more long/medium words appear
   const longThreshold = 0.1 + difficulty * 0.3; // 10%→40%
@@ -157,11 +302,11 @@ export function getNextWord(difficulty: number): string {
 
   let pool: string[];
   if (roll < longThreshold) {
-    pool = LONG_WORDS;
+    pool = long;
   } else if (roll < medThreshold) {
-    pool = MEDIUM_WORDS;
+    pool = medium;
   } else {
-    pool = SHORT_WORDS;
+    pool = short;
   }
 
   return pool[Math.floor(Math.random() * pool.length)];

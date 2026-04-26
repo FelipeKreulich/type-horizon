@@ -2,19 +2,32 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import StarField from './StarField';
+import Galaxy from './Galaxy';
+import { useGameStore } from '@/store/useGameStore';
+import { i18n } from '@/lib/i18n';
 
 export default function HomePageClient() {
   const router = useRouter();
-  // Lazy initializer — safe here because this component is never SSR'd (dynamic ssr:false)
   const [highscore] = useState(() => Number(localStorage.getItem('th_highscore') || 0));
+  const language = useGameStore((s) => s.language);
+  const setLanguage = useGameStore((s) => s.setLanguage);
+  const t = i18n[language];
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#020408] overflow-hidden">
-      {/* Animated star canvas — purely client-side, no hydration conflict */}
-      <StarField velocity={0} />
+      <Galaxy
+        mouseInteraction={false}
+        mouseRepulsion={false}
+        rotationSpeed={0.03}
+        density={0.8}
+        glowIntensity={0.25}
+        twinkleIntensity={0.4}
+        speed={0.5}
+        saturation={0}
+        hueShift={220}
+        transparent
+      />
 
-      {/* Background gradient vortex hint */}
       <div
         className="absolute left-[-15%] top-1/2 -translate-y-1/2 w-[45vw] h-[45vw] rounded-full pointer-events-none"
         style={{
@@ -24,13 +37,30 @@ export default function HomePageClient() {
         }}
       />
 
+      {/* Language selector */}
+      <div className="absolute top-4 right-6 flex gap-2" style={{ zIndex: 10 }}>
+        {(['en', 'pt'] as const).map((lang) => (
+          <button
+            key={lang}
+            onClick={() => setLanguage(lang)}
+            className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-widest transition-all duration-200 ${
+              language === lang
+                ? 'bg-blue-600 text-white'
+                : 'bg-slate-800 text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            {lang}
+          </button>
+        ))}
+      </div>
+
       {/* Main content */}
       <div
         className="relative flex flex-col items-center gap-10 text-center px-6"
         style={{ zIndex: 3 }}
       >
         <div className="flex flex-col items-center gap-3">
-          <p className="text-xs text-slate-600 uppercase tracking-[0.3em]">Typing Survival</p>
+          <p className="text-xs text-slate-600 uppercase tracking-[0.3em]">{t.tagline}</p>
           <h1
             className="text-6xl md:text-8xl font-black text-white tracking-tight"
             style={{ textShadow: '0 0 60px rgba(99,179,237,0.3)' }}
@@ -47,14 +77,12 @@ export default function HomePageClient() {
           >
             HORIZON
           </h2>
-          <p className="text-slate-500 text-sm max-w-xs mt-2">
-            A black hole is pulling you in. Type fast to escape. Every word buys you distance.
-          </p>
+          <p className="text-slate-500 text-sm max-w-xs mt-2">{t.description}</p>
         </div>
 
         {highscore > 0 && (
           <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-slate-600 uppercase tracking-widest">Your best</span>
+            <span className="text-xs text-slate-600 uppercase tracking-widest">{t.yourBest}</span>
             <span className="text-2xl font-bold text-yellow-400">{highscore.toLocaleString()}</span>
           </div>
         )}
@@ -67,7 +95,7 @@ export default function HomePageClient() {
             boxShadow: '0 0 30px rgba(99,102,241,0.4)',
           }}
         >
-          <span className="relative z-10">Play Now</span>
+          <span className="relative z-10">{t.playNow}</span>
           <div
             className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
             style={{
@@ -78,26 +106,17 @@ export default function HomePageClient() {
         </button>
 
         <div className="flex flex-col gap-2 text-xs text-slate-600 max-w-xs">
-          <div className="flex items-center gap-3">
-            <span className="text-emerald-500">→</span>
-            <span>
-              Type the word and press{' '}
-              <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Space</kbd> or{' '}
-              <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Enter</kbd>
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-blue-500">→</span>
-            <span>Longer words = more distance boost</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-purple-500">→</span>
-            <span>Build combos for speed boosts</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-red-500">→</span>
-            <span>Errors pull you toward the void</span>
-          </div>
+          {[
+            { color: 'text-emerald-500', text: t.hint1 },
+            { color: 'text-blue-500', text: t.hint2 },
+            { color: 'text-purple-500', text: t.hint3 },
+            { color: 'text-red-500', text: t.hint4 },
+          ].map(({ color, text }) => (
+            <div key={text} className="flex items-center gap-3">
+              <span className={color}>→</span>
+              <span>{text}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

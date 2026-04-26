@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/store/useGameStore';
 import { getDifficulty } from '@/lib/gameLogic';
 import BlackHoleVisual from './BlackHoleVisual';
-import StarField from './StarField';
+import Galaxy from './Galaxy';
 import HUD from './HUD';
 import TypingInput from './TypingInput';
 
@@ -15,7 +15,6 @@ import TypingInput from './TypingInput';
 export default function GameCanvas() {
   const gameState = useGameStore((s) => s.gameState);
   const playerDistance = useGameStore((s) => s.playerDistance);
-  const playerVelocity = useGameStore((s) => s.playerVelocity);
   const startTime = useGameStore((s) => s.startTime);
   const tickPhysics = useGameStore((s) => s.tickPhysics);
 
@@ -60,8 +59,19 @@ export default function GameCanvas() {
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#020408]">
-      {/* Layer 0: stars */}
-      <StarField velocity={playerVelocity} />
+      {/* Layer 0: Galaxy WebGL starfield */}
+      <Galaxy
+        mouseInteraction={false}
+        mouseRepulsion={false}
+        rotationSpeed={0.04}
+        density={0.9}
+        glowIntensity={0.28}
+        twinkleIntensity={0.35}
+        speed={0.7}
+        saturation={0}
+        hueShift={220}
+        transparent
+      />
 
       {/* Layer 1: black hole */}
       <BlackHoleVisual playerDistance={playerDistance} intensity={intensity} />

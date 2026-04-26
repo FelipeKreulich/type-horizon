@@ -2,76 +2,79 @@
 
 import { useState } from 'react';
 import { useGameStore } from '@/store/useGameStore';
+import { i18n } from '@/lib/i18n';
+import { useRouter } from 'next/navigation';
 
 function readHighscore(): number {
   if (typeof window === 'undefined') return 0;
   return Number(localStorage.getItem('th_highscore') || 0);
 }
 
-/**
- * Game over overlay showing final stats and restart option.
- */
 export default function GameOverScreen() {
+  const router = useRouter();
   const stats = useGameStore((s) => s.stats);
   const resetGame = useGameStore((s) => s.resetGame);
   const startCountdown = useGameStore((s) => s.startCountdown);
-  // Lazy initializer — reads localStorage once, no setState-in-effect
+  const language = useGameStore((s) => s.language);
+  const t = i18n[language];
   const [highscore] = useState<number>(readHighscore);
 
   const isNewRecord = stats.score > 0 && stats.score >= highscore;
 
+  const handleMenu = () => {
+    resetGame();
+    router.push('/');
+  };
+
   return (
     <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/70 backdrop-blur-md">
       <div className="flex flex-col items-center gap-8 max-w-md w-full px-8">
-        {/* Title */}
         <div className="flex flex-col items-center gap-2">
           <h1
             className="text-4xl font-bold text-red-400 tracking-widest uppercase"
             style={{ textShadow: '0 0 30px rgba(239,68,68,0.6)' }}
           >
-            Consumed
+            {t.consumed}
           </h1>
-          <p className="text-slate-500 text-sm">The black hole got you.</p>
+          <p className="text-slate-500 text-sm">{t.consumedSub}</p>
         </div>
 
-        {/* Stats grid */}
         <div className="grid grid-cols-2 gap-4 w-full">
-          <Stat label="Score" value={stats.score.toLocaleString()} highlight={isNewRecord} />
-          <Stat label="Survived" value={`${stats.survivalSeconds}s`} />
-          <Stat label="WPM" value={String(stats.wpm)} />
-          <Stat label="Accuracy" value={`${stats.accuracy}%`} />
-          <Stat label="Words" value={String(stats.wordsCompleted)} />
-          <Stat label="Best Combo" value={`×${stats.bestCombo}`} />
+          <Stat label={t.scoreLabel} value={stats.score.toLocaleString()} highlight={isNewRecord} />
+          <Stat label={t.survivedLabel} value={`${stats.survivalSeconds}s`} />
+          <Stat label={t.wpmLabel} value={String(stats.wpm)} />
+          <Stat label={t.accuracyLabel} value={`${stats.accuracy}%`} />
+          <Stat label={t.wordsLabel} value={String(stats.wordsCompleted)} />
+          <Stat label={t.bestComboLabel} value={`×${stats.bestCombo}`} />
         </div>
 
-        {/* High score notice */}
         {isNewRecord && (
           <div className="text-yellow-400 text-sm font-bold tracking-widest uppercase animate-pulse">
-            ★ New High Score! ★
+            {t.newHighScore}
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex gap-4">
           <button
             onClick={startCountdown}
             className="px-8 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-widest uppercase text-sm transition-all duration-200 hover:scale-105 active:scale-95"
             style={{ boxShadow: '0 0 20px rgba(59,130,246,0.4)' }}
           >
-            Try Again
+            {t.tryAgain}
           </button>
           <button
-            onClick={resetGame}
+            onClick={handleMenu}
             className="px-8 py-3 rounded-lg border border-slate-700 hover:border-slate-500 text-slate-400 hover:text-slate-200 font-bold tracking-widest uppercase text-sm transition-all duration-200"
           >
-            Menu
+            {t.menu}
           </button>
         </div>
 
-        {/* Guest highscore hint */}
         <p className="text-xs text-slate-600 text-center">
-          High score saved locally.{' '}
-          <span className="text-slate-500">Best: {highscore.toLocaleString()}</span>
+          {t.localSave}{' '}
+          <span className="text-slate-500">
+            {t.best}: {highscore.toLocaleString()}
+          </span>
         </p>
       </div>
     </div>

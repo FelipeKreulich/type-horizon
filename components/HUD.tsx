@@ -1,13 +1,13 @@
 'use client';
 
 import { useGameStore } from '@/store/useGameStore';
+import { i18n } from '@/lib/i18n';
 
-/**
- * Heads-up display showing live stats during gameplay.
- */
 export default function HUD() {
   const stats = useGameStore((s) => s.stats);
   const playerDistance = useGameStore((s) => s.playerDistance);
+  const language = useGameStore((s) => s.language);
+  const t = i18n[language];
 
   const dangerLevel = 1 - playerDistance / 100;
   const dangerColor =
@@ -26,16 +26,19 @@ export default function HUD() {
     >
       {/* Left: survival & score */}
       <div className="flex flex-col gap-0.5">
-        <span className="text-xs text-slate-500 uppercase tracking-widest">Score</span>
+        <span className="text-xs text-slate-500 uppercase tracking-widest">{t.score}</span>
         <span className="text-xl font-bold text-white tabular-nums">
           {stats.score.toLocaleString()}
         </span>
-        <span className="text-xs text-slate-400">{stats.survivalSeconds}s survived</span>
+        <span className="text-xs text-slate-400">
+          {stats.survivalSeconds}
+          {t.survived}
+        </span>
       </div>
 
       {/* Center: danger meter */}
       <div className="flex flex-col items-center gap-1">
-        <span className="text-xs text-slate-500 uppercase tracking-widest">Distance</span>
+        <span className="text-xs text-slate-500 uppercase tracking-widest">{t.distance}</span>
         <div className="w-36 h-2 bg-slate-800 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-300"
@@ -49,7 +52,8 @@ export default function HUD() {
           />
         </div>
         <span className={`text-xs font-mono ${dangerColor}`}>
-          {Math.round(playerDistance)}u away
+          {Math.round(playerDistance)}
+          {t.away}
         </span>
       </div>
 
@@ -57,11 +61,11 @@ export default function HUD() {
       <div className="flex flex-col items-end gap-0.5">
         <div className="flex gap-4">
           <div className="flex flex-col items-center">
-            <span className="text-xs text-slate-500 uppercase tracking-widest">WPM</span>
+            <span className="text-xs text-slate-500 uppercase tracking-widest">{t.wpm}</span>
             <span className="text-lg font-bold text-blue-300 tabular-nums">{stats.wpm}</span>
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-xs text-slate-500 uppercase tracking-widest">Acc</span>
+            <span className="text-xs text-slate-500 uppercase tracking-widest">{t.acc}</span>
             <span
               className={`text-lg font-bold tabular-nums ${
                 stats.accuracy >= 90
@@ -77,7 +81,7 @@ export default function HUD() {
         </div>
         {stats.combo >= 3 && (
           <span className="text-xs font-bold text-purple-300 combo-burst">
-            x{stats.combo} COMBO
+            ×{stats.combo} {t.combo}
           </span>
         )}
       </div>

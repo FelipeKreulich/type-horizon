@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { getNextWord, getWordDistanceBoost } from '@/lib/wordGenerator';
+import type { Language } from '@/lib/i18n';
 import {
   calculateWPM,
   calculateAccuracy,
@@ -52,6 +53,10 @@ interface GameStore {
   isGlowing: boolean;
   isComboActive: boolean;
 
+  // --- language ---
+  language: Language;
+  setLanguage: (lang: Language) => void;
+
   // --- actions ---
   startCountdown: () => void;
   startGame: () => void;
@@ -91,9 +96,15 @@ function initialStats(): GameStats {
 // Store
 // ---------------------------------------------------------------------------
 
+function readLanguage(): Language {
+  if (typeof window === 'undefined') return 'en';
+  return (localStorage.getItem('th_language') as Language) ?? 'en';
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   gameState: 'idle',
-  currentWord: getNextWord(0),
+  language: readLanguage(),
+  currentWord: getNextWord(0, readLanguage()),
   inputValue: '',
 
   playerDistance: INITIAL_DISTANCE,
@@ -111,10 +122,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // -----------------------------------------------------------------------
   startCountdown: () => {
+    const lang = get().language;
     set({
       gameState: 'countdown',
       countdownValue: 3,
-      currentWord: getNextWord(0),
+      currentWord: getNextWord(0, lang),
       inputValue: '',
       playerDistance: INITIAL_DISTANCE,
       playerVelocity: 0,
@@ -123,6 +135,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       totalCharsTyped: 0,
       correctCharsTyped: 0,
     });
+  },
+
+  setLanguage: (lang) => {
+    if (typeof window !== 'undefined') localStorage.setItem('th_language', lang);
+    set({ language: lang, currentWord: getNextWord(0, lang) });
   },
 
   setCountdown: (value) => set({ countdownValue: value }),
@@ -160,9 +177,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   resetGame: () => {
+    const lang = get().language;
     set({
       gameState: 'idle',
-      currentWord: getNextWord(0),
+      currentWord: getNextWord(0, lang),
       inputValue: '',
       playerDistance: INITIAL_DISTANCE,
       playerVelocity: 0,
@@ -233,7 +251,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newDistance = Math.min(playerDistance + distBoost, 100);
 
       const difficulty = getDifficulty(elapsed);
-      const nextWord = getNextWord(difficulty);
+      const nextWord = getNextWord(difficulty, get().language);
 
       const score = calculateScore({
         survivalSeconds: elapsed,
