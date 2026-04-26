@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Galaxy from './Galaxy';
+import StarField from './StarField';
 import { useGameStore } from '@/store/useGameStore';
 import { i18n } from '@/lib/i18n';
 
@@ -15,18 +15,7 @@ export default function HomePageClient() {
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#020408] overflow-hidden">
-      <Galaxy
-        mouseInteraction={false}
-        mouseRepulsion={false}
-        rotationSpeed={0.03}
-        density={0.8}
-        glowIntensity={0.25}
-        twinkleIntensity={0.4}
-        speed={0.5}
-        saturation={0}
-        hueShift={220}
-        transparent
-      />
+      <StarField velocity={0} />
 
       <div
         className="absolute left-[-15%] top-1/2 -translate-y-1/2 w-[45vw] h-[45vw] rounded-full pointer-events-none"
